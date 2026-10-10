@@ -8,15 +8,34 @@
 - MSSV: 2A202602862
 - Email: ngodoanngoc60@gmail.com
 - Link repo (fork): https://github.com/Baor-AI/K4-L2L3-DAY23-NguyenVanBao-2A202602862-SensorFusion
-- Commit hash nộp (`git rev-parse HEAD`):
+- Commit hash nộp (`git rev-parse HEAD`): ghi trên LMS (commit cuối của nhánh `main`)
 
 ## Tóm tắt kết quả
 
-- `fusion_mode` (bắt buộc `compare`), `frames`, `segment`, `seed`:
-- `detection.precision`, `detection.recall`, `detection.tp/fp/fn`:
+- `fusion_mode` (bắt buộc `compare`), `frames`, `segment`, `seed`: `compare`, `[0, 198]` (199 frame),
+  `training_segment-1005081002024129653_5313_150_5333_150_with_camera_labels.tfrecord`, `seed = 0`
+- `detection.precision`, `detection.recall`, `detection.tp/fp/fn`: precision **0.9701**, recall **0.7004**,
+  tp/fp/fn = **519 / 16 / 222**
 - `tracking.lidar.rmse`, `matches`, `sum_sq_err`, `ghost_track_frames`, `missed_gt_frames`, `mean_confirmed_tracks`:
+  rmse **0.1503 m**, matches **502**, sum_sq_err **11.3436**, ghost **0**, missed **239**, mean_confirmed **2.5226**
 - `tracking.fused.rmse`, `matches`, `sum_sq_err`, `ghost_track_frames`, `missed_gt_frames`, `mean_confirmed_tracks`:
+  rmse **0.1359 m**, matches **502**, sum_sq_err **9.2668**, ghost **0**, missed **239**, mean_confirmed **2.5226**
 - Giải thích khác biệt hai mode, đọc RMSE cùng số ghép và ghost/miss:
+  - Hai mode có **cùng** matches (502), ghost (0), missed (239) và mean_confirmed (2.52): đúng thiết kế
+    track-then-fuse — vòng đời track (tạo/xác nhận/xoá) chỉ do LiDAR quyết định, nên camera không thể thêm
+    hay bớt track. Vì vậy so sánh RMSE giữa hai mode là công bằng: cùng 502 cặp track–GT.
+  - Trên cùng tập cặp đó, fused giảm `sum_sq_err` từ 11.34 xuống 9.27 (−18%), RMSE 0.150 → **0.136 m**
+    (`rmse_fused − rmse_lidar = −0.0145 m` ≤ 0.05 m). Theo `grade_run.log`, trong các frame có cặp ghép,
+    fused có sai số nhỏ hơn ở 137 frame và lớn hơn ở 58 frame: camera (σ = 5 px) chủ yếu siết vị trí
+    ngang của xe phía trước; có frame nhiễu camera kéo lệch nhẹ nhưng tổng thể có lợi.
+  - Chất lượng tracking: `precision_track = 502/(502+0) = 1.00`, `coverage = 502/519 = 0.967`.
+    Không có ghost nhờ cổng χ² + cần 5 frame LiDAR liên tiếp mới confirmed (16 FP của detector không đủ
+    để sinh track confirmed).
+  - 239 missed GT-frame chủ yếu do detector: 217 miss nằm ở frame detector có FN (tổng det_fn = 222,
+    recall 0.70); phần còn lại là độ trễ khởi tạo (track đầu tiên confirmed ở frame 4) và xe mới xuất hiện.
+    Camera không bù được các miss này vì camera không được phép tạo track.
+  - Giới hạn: đo camera là tâm hộp 2D **ground-truth** FRONT + nhiễu seeded, nên mức cải thiện RMSE
+    của fused là cận lạc quan, không chứng minh chất lượng một camera detector thật.
 
 Chạy từ root repo:
 
@@ -100,11 +119,11 @@ Ghi rõ, kể cả khi không dùng ("Không dùng AI"). Xem [RULES.md](../RULES
 
 ## Checklist nộp
 
-- [ ] **Part E–H** trong `workspace/` đã implement; `pytest student/tests -q` không còn `failed`/`xfailed`
-- [ ] Part A–D: không bắt buộc sửa (hoặc ghi chú nếu bạn đã sửa)
-- [ ] Lần chạy chấm điểm: `--fusion compare --seed 0`, `frame_start: 0`, `frame_end: 198`
-- [ ] Đã commit `student/artifacts/metrics*.json` và `student/artifacts/grade_run*.log` (không sửa tay)
-- [ ] Đã điền đủ file này, gồm khai báo AI
-- [ ] Không commit dữ liệu Waymo, weights, `paths.yaml`, API key
+- [x] **Part E–H** trong `workspace/` đã implement; `pytest student/tests -q` không còn `failed`/`xfailed`
+- [x] Part A–D: không bắt buộc sửa (không sửa)
+- [x] Lần chạy chấm điểm: `--fusion compare --seed 0`, `frame_start: 0`, `frame_end: 198`
+- [x] Đã commit `student/artifacts/metrics*.json` và `student/artifacts/grade_run*.log` (không sửa tay)
+- [x] Đã điền đủ file này, gồm khai báo AI
+- [x] Không commit dữ liệu Waymo, weights, `paths.yaml`, API key
 - [ ] `python tools/check_submission.py` báo `KẾT QUẢ: SẴN SÀNG NỘP`
 - [ ] Đã push và nộp link repo + commit hash trên LMS ([hướng dẫn nộp](../SUBMISSION.md))
