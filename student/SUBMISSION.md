@@ -6,7 +6,7 @@
 
 - Họ tên: Nguyễn Văn Bảo
 - MSSV: 2A202602862
-- Email: ngodoanngoc60@gmail.com
+- Email: baour1210@gmail.com
 - Link repo (fork): https://github.com/Baor-AI/K4-L2L3-DAY23-NguyenVanBao-2A202602862-SensorFusion
 - Commit hash nộp (`git rev-parse HEAD`): ghi trên LMS (commit cuối của nhánh `main`)
 
